@@ -1,0 +1,46 @@
+site_name: Hypixel Tool Documentation
+repo_name: 'HuangFuSL/hypixel-tools'
+repo_url: 'https://github.com/HuangFuSL/hypixel-tools'
+edit_uri: 'https://github.com/HuangFuSL/hypixel-tools/edit/main'
+
+theme:
+  name: material
+  custom_dir: overrides
+  language: en
+  palette:
+    primary: 'teal'
+    accent: 'green'
+  features:
+    - navigation.tabs
+    - navigation.expand
+    - search.suggest
+markdown_extensions:
+  - pymdownx.arithmatex
+  - pymdownx.details
+  - admonition
+  - codehilite:
+      guess_lang: false
+      linenums: false
+  - toc:
+      permalink: true
+  - footnotes
+  - meta
+  - def_list
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:pymdownx.emoji.to_png
+  - pymdownx.extra
+  - pymdownx.inlinehilite
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tabbed
+  - pymdownx.tilde
