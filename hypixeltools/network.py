@@ -1,12 +1,14 @@
-import requests
 import json
 from typing import Callable
+
+import requests
 
 root_URL = "http://api.hypixel.net/"
 mojang_URL = "https://sessionserver.mojang.com/session/minecraft/profile/"
 arg_parser = lambda **kwargs: "?" + \
-    "&".join([_ + "=" + kwargs[_] for _ in kwargs])
+    "&".join([_ + "=" + str(kwargs[_]) for _ in kwargs])
 api_content = {}
+asyncapi_content = {}
 interfaces = []
 
 class IllegalArgumentError(Exception):
@@ -23,7 +25,6 @@ def api(e: Callable) -> Callable:
     """
     
     name = e()
-
     def ret(**kwargs):
         api_name = name
         ret = json.loads(requests.get(root_URL + api_name + arg_parser(**kwargs)).content)
@@ -35,6 +36,28 @@ def api(e: Callable) -> Callable:
     ret.__doc__ = e.__doc__
     api_content[name] = ret
     interfaces.append(name.replace("/", "_"))
+    return ret
+
+
+async def get_wrapper(url, params = None, **kwargs):
+    return requests.get(url, params, **kwargs)
+
+def asyncapi(e: Callable) -> Callable:
+    """
+    async version of the decorator
+    """
+
+    name = e()
+    async def ret(**kwargs):
+        api_name = name
+        resp = json.loads((await get_wrapper(root_URL + api_name + arg_parser(**kwargs))).content)
+        if resp['success']:
+            return resp
+        else:
+            raise IllegalArgumentError(resp['cause'])
+
+    asyncapi_content[name] = ret
+    interfaces.append("async_" + name.replace("/", "_"))
     return ret
 
 
@@ -60,6 +83,9 @@ def watchdogstats():
 
     https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/methods/watchdogstats.md
     """
+    return "watchdogstats"
+@asyncapi
+def async_watchdogstats():
     return "watchdogstats"
 
 
@@ -87,6 +113,11 @@ def status():
 
     https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/methods/status.md
     """
+    return "status"
+
+
+@asyncapi
+def async_status():
     return "status"
 
 
@@ -172,6 +203,10 @@ def recentgames():
     return "recentgames"
 
 
+@asyncapi
+def async_recentgames():
+    return "recentgames"
+
 @api
 def playercount():
     """
@@ -194,6 +229,10 @@ def playercount():
     """
     return "playercount"
 
+
+@asyncapi
+def async_playercount():
+    return "playercount"
 
 @api
 def player():
@@ -238,6 +277,10 @@ def player():
     return "player"
 
 
+@asyncapi
+def async_player():
+    return "player"
+
 @api
 def leaderboards():
     """
@@ -274,6 +317,10 @@ def leaderboards():
     return "leaderboards"
 
 
+@asyncapi
+def async_leaderboards():
+    return "leaderboards"
+
 @api
 def key():
     """
@@ -301,6 +348,10 @@ def key():
     return "key"
 
 
+@asyncapi
+def async_key():
+    return "key"
+
 @api
 def guild():
     """
@@ -314,6 +365,10 @@ def guild():
     """
     return "guild"
 
+
+@asyncapi
+def async_guild():
+    return "guild"
 
 @api
 def gamecounts():
@@ -352,6 +407,10 @@ def gamecounts():
     return "gamecounts"
 
 
+@asyncapi
+def async_gamecounts():
+    return "gamecounts"
+
 @api
 def friends():
     """
@@ -381,6 +440,10 @@ def friends():
     return "friends"
 
 
+@asyncapi
+def async_friends():
+    return "friends"
+
 @api
 def findguild():
     """
@@ -401,6 +464,10 @@ def findguild():
     """
     return "findguild"
 
+
+@asyncapi
+def async_findguild():
+    return "findguild"
 
 @api
 def boosters():
@@ -449,6 +516,10 @@ def boosters():
     """
     return "boosters"
 
+
+@asyncapi
+def async_boosters():
+    return "boosters"
 
 @api
 def skyblock_auction():
@@ -508,6 +579,10 @@ def skyblock_auction():
     return "skyblock/auction"
 
 
+@asyncapi
+def async_skyblock_auction():
+    return "skyblock/auction"
+
 @api
 def skyblock_auctions():
     """
@@ -532,6 +607,11 @@ def skyblock_auctions():
 
     https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/methods/skyblock/auctions.md
     """
+    return "skyblock/auctions"
+
+
+@asyncapi
+def async_skyblock_auctions():
     return "skyblock/auctions"
 
 @api
@@ -565,6 +645,11 @@ def skyblock_auctions_ended():
 
     https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/methods/skyblock/auctions_ended.md
     """
+    return "skyblock/auctions_ended"
+
+
+@asyncapi
+def async_skyblock_auctions_ended():
     return "skyblock/auctions_ended"
 
 @api
@@ -612,6 +697,10 @@ def skyblock_bazaar():
     return "skyblock/bazaar"
 
 
+@asyncapi
+def async_skyblock_bazaar():
+    return "skyblock/bazaar"
+
 @api
 def skyblock_news():
     """
@@ -641,6 +730,10 @@ def skyblock_news():
     return "skyblock/news"
 
 
+@asyncapi
+def async_skyblock_news():
+    return "skyblock/news"
+
 @api
 def skyblock_profile():
     """
@@ -652,6 +745,10 @@ def skyblock_profile():
     """
     return "skyblock/profile"
 
+
+@asyncapi
+def async_skyblock_profile():
+    return "skyblock/profile"
 
 @api
 def skyblock_profiles():
@@ -666,6 +763,11 @@ def skyblock_profiles():
 
     https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/methods/skyblock/profiles.md
     """
+    return "skyblock/profiles"
+
+
+@asyncapi
+def async_skyblock_profiles():
     return "skyblock/profiles"
 
 __all__ = interfaces.copy()
