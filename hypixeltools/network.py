@@ -27,7 +27,9 @@ def api(e: Callable) -> Callable:
     name = e()
     def ret(**kwargs):
         api_name = name
-        ret = json.loads(requests.get(root_URL + api_name + arg_parser(**kwargs)).content)
+        ret = json.loads(
+            requests.get(root_URL + api_name + arg_parser(**kwargs)).content
+        )
         if ret['success']:
             return ret
         else:
@@ -50,7 +52,9 @@ def asyncapi(e: Callable) -> Callable:
     name = e()
     async def ret(**kwargs):
         api_name = name
-        resp = json.loads((await get_wrapper(root_URL + api_name + arg_parser(**kwargs))).content)
+        resp = json.loads((
+            await get_wrapper(root_URL + api_name + arg_parser(**kwargs))).content
+        )
         if resp['success']:
             return resp
         else:
@@ -92,9 +96,11 @@ def async_watchdogstats():
 @api
 def status():
     """
-    Returns online status information for given player, including game, mode and map when available.
-
-    Players can disable this endpoint via in-game settings. When done so the API will return as if the player is offline.
+    Returns online status information for given player, including game, mode and
+    
+    map when available. Players can disable this endpoint via in-game settings.
+    
+    When done so the API will return as if the player is offline.
 
     Parameters: `key`, `uuid`
 
@@ -123,9 +129,13 @@ def async_status():
 
 def resources(**kwargs):
     """
-    Provides an endpoint to retrieve resources which don't change often. This does not require an API key.
-
-    All resources return lastUpdated field which is a Unix milliseconds value of when the file was last updated. Some files, such as for SkyBlock will also return the game version they were generated for.
+    Provides an endpoint to retrieve resources which don't change often. This
+    
+    does not require an API key. All resources return `lastUpdated` field which 
+    
+    is a Unix milliseconds value of when the file was last updated. Some files,
+    
+    such as for SkyBlock will also return the game version they were generated for.
 
     Parameters: `resource`
 
@@ -174,9 +184,13 @@ def resources(**kwargs):
 @api
 def recentgames():
     """
-    Returns recent games of a player. A maximum of 100 games are returned and recent games are only stored for up to 3 days at this time.
-
-    Players can disable this endpoint via in-game settings. When done so the API will return as if there is no games.
+    Returns recent games of a player. A maximum of 100 games are returned and
+    
+    recent games are only stored for up to 3 days at this time. Players can
+    
+    disable this endpoint via in-game settings. When done so the API will return
+    
+    as if there is no games.
 
     Parameters: `key`, `uuid`
 
@@ -284,7 +298,9 @@ def async_player():
 @api
 def leaderboards():
     """
-    Returns a list of the official leaderboards and their current standings for games on the network.
+    Returns a list of the official leaderboards and their current standings for
+    
+    games on the network.
 
     Parameters: `key`
 
@@ -300,8 +316,8 @@ def leaderboards():
                     'title': 'TNT Run Wins', 
                     'location': '-2554,57,715', 
                     'count': 10,
-                    'leaders': [
-                        'aed8deec-8c35-4187-8a79-ba72ab29076d', // Players on the leadboard
+                    'leaders': [ // Players on the leadboard
+                        'aed8deec-8c35-4187-8a79-ba72ab29076d',
                         ...
                     ]
                 }, 
@@ -355,13 +371,15 @@ def async_key():
 @api
 def guild():
     """
-    Returns information about given guild.
+    Returns information about given guild. For a JSON list of Guild achievements
+    
+    and a JSON list of Guild permissions, please refer to `resources()` method
 
-    For a JSON list of Guild achievements and a JSON list of Guild permissions, please refer to `resource()` method
+    Parameters: `key`, `id` (Guild ID), `player`, `name` (Guild name)
 
-    Parameters: `key`, `id` (Guild ID returned by `findguild()` method), `player`, `name` (Guild name)
-
-    A detailed explanation of each field can be found at https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/methods/guild.md
+    A detailed explanation of each field can be found at
+    
+    https://github.com/HypixelDev/PublicAPI/blob/master/Documentation/methods/guild.md
     """
     return "guild"
 
@@ -373,11 +391,13 @@ def async_guild():
 @api
 def gamecounts():
     """
-    Returns the current player count along with the player count of each public game + mode on the server.
+    Returns the current player count along with the player count of each public
 
-    Due to the large amount of modes and that they can change at anytime we don't currently have a friendly
+    game + mode on the server. Due to the large amount of modes and that they
     
-    list of mode keys to clean names. This may be added at a later date.
+    can change at anytime we don't currently have a friendly list of mode keys
+    
+    to clean names. This may be added at a later date.
 
     Parameters: `key`
 
@@ -524,8 +544,11 @@ def async_boosters():
 @api
 def skyblock_auction():
     """
-    Returns SkyBlock auctions by either player, profile or auction uuid.
-    Only "active" auctions are returned, these are auctions that are still open or that have not had all bids/items claimed.
+    Returns SkyBlock auctions by either player, profile or auction uuid. Only
+    
+    "active" auctions are returned, these are auctions that are still open or
+    
+    that have not had all bids/items claimed.
 
     Parameters: `key`, `player`, `profile`, `uuid`
 
@@ -586,7 +609,11 @@ def async_skyblock_auction():
 @api
 def skyblock_auctions():
     """
-    Returns SkyBlock auctions that are currently active in the in-game Auction House. This method uses pagination due to the amount of results returned. Each page will return up to 1,000 results.
+    Returns SkyBlock auctions that are currently active in the in-game Auction
+    
+    House. This method uses pagination due to the amount of results returned.
+    
+    Each page will return up to 1,000 results.
 
     Parameters: `key`, `page`
 
@@ -617,7 +644,9 @@ def async_skyblock_auctions():
 @api
 def skyblock_auctions_ended():
     """
-    Returns SkyBlock auctions which ended in the last 60 seconds (More precisely, whatever time is defined in the "Cache-Control" header of the response).
+    Returns SkyBlock auctions which ended in the last 60 seconds (More precisely,
+    
+    whatever time is defined in the "Cache-Control" header of the response).
 
     Parameters: `key`
 
@@ -655,7 +684,9 @@ def async_skyblock_auctions_ended():
 @api
 def skyblock_bazaar():
     """
-    Returns the list of products along with their sell summary, buy summary and quick status.
+    Returns the list of products along with their sell summary, buy summary and
+    
+    quick status.
 
     Parameters: `key`
 
@@ -737,7 +768,9 @@ def async_skyblock_news():
 @api
 def skyblock_profile():
     """
-    Returns a SkyBlock profile's data, such as stats, objectives etc. The data returned can differ depending on the players in-game API settings.
+    Returns a SkyBlock profile's data, such as stats, objectives etc. The data
+    
+    returned can differ depending on the players in-game API settings.
 
     Parameters: `key`, `profile`
 

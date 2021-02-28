@@ -18,7 +18,10 @@ class AuctionOrder():
             self.item_lore = sub("§.", "", self.item_lore)
 
     def __hash__(self) -> int:
-        return reduce(lambda x, y: x * 16 + y, map(lambda _: ord(_.upper()) - (48 if _.isdigit() else 55), self.uuid)) + hash(self.uuid)
+        return reduce(
+            lambda x, y: x * 16 + y,
+            map(lambda _: ord(_.upper()) - (48 if _.isdigit() else 55), self.uuid)
+        ) + hash(self.uuid)
     
     def __repr__(self):
         try:
@@ -62,7 +65,10 @@ def loadFullPage(key: str):
     firstPage = skyblock_auctions(key=key, page=0)
     pageCount = firstPage['totalPages']
     ret: List[Dict] = []
-    tasks: List[Task] = [Task(async_skyblock_auctions(key=key, page=i)) for i in range(1, pageCount)]
+    tasks: List[Task] = [
+        Task(async_skyblock_auctions(key=key, page=i))
+        for i in range(1, pageCount)
+    ]
 
     loop = get_event_loop()
     loop.run_until_complete(wait(tasks))
