@@ -1,12 +1,15 @@
 from asyncio import Task, get_event_loop, wait
+from asyncio.tasks import sleep
 from base64 import standard_b64decode as b64decode
 from functools import reduce
 from json import JSONEncoder
-from operator import or_
+from operator import and_, or_, not_, truth
 from re import sub
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from time import time
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 from .network import *
+from .comm import BaseFilter
 
 
 class AuctionOrder():
@@ -17,10 +20,12 @@ class AuctionOrder():
     """
 
     def __init__(self, **kwargs):
+        self.bin = False
         for _ in kwargs:
             self.__setattr__(_, kwargs[_])
         if 'item_lore' in kwargs:
             self.item_lore = sub("§.", "", self.item_lore)
+        self.hash = None
 
     def __hash__(self) -> int:
         """
@@ -28,10 +33,24 @@ class AuctionOrder():
 
         `__sub__()` operator.
         """
-        return reduce(
-            lambda x, y: x * 16 + y,
-            map(lambda _: ord(_.upper()) - (48 if _.isdigit() else 55), self.uuid)
-        ) + hash(self.uuid)
+        
+        if not self.hash:
+            id = getattr(self, "uuid", None)
+            id = id if id else getattr(self, "auction_id", None)
+            if not id:
+                raise ValueError("Malformed `AuctionOrder` object")
+            self.hash = reduce(
+                lambda x, y: x * 16 + y,
+                map(lambda _: ord(_.upper()) -
+                    (48 if _.isdigit() else 55), id)
+            ) + hash(id)
+        return self.hash
+
+    def __eq__(self, o) -> bool:
+        try:
+            return self.auction_id == o.auction_id
+        except AttributeError:
+            return self.uuid == o.uuid
     
     def __repr__(self) -> str:
         try:
@@ -53,6 +72,20 @@ class AuctionOrder():
         Decode the item data, which is base64-encoded.
         """
         return b64decode(self.item_bytes['data'])
+
+class AuctionFilter(BaseFilter):
+
+    @staticmethod
+    def getAttributeList():
+        """
+        Returns a set containing all the fields for filtering
+        """
+        return frozenset({
+            'start', 'end', 'item_name', 'item_lore', 'extra', 'category',
+            'tier', 'starting_bid', 'claimed', 'claimed_bidders', 'bin',
+            'highest_bid_amount', 'bids'
+        })
+            
 
 
 class AuctionEncoder(JSONEncoder):
@@ -118,7 +151,48 @@ def loadAuctionPages(key: str, *pageRange: Tuple[int]) -> Set[AuctionOrder]:
 
     ret.append(firstPage['auctions'])
     return reduce(or_, map(loadAuctionAPI, ret))
-    
+
+def defaultProcessor(prev: set, current: set):
+    if prev == current:
+        print("No transactions")
+        return None
+    for _ in prev - current:
+        if _.highest_bid_amount:
+            print("%s sold at %d" % (_.item_name, _.highest_bid_amount))
+        else:
+            print("%s not sold" % (_.item_name,))
+    for _ in current - prev:
+        print("Auction for %s starts at %d" % (_.item_name, _.starting_bid))
+    print("%d auctions remaining" % (len(current), ))
+
+
+def watchAuction(
+    key: str, profile: str, processor: Callable = defaultProcessor, *,
+    interval: int = 30, timeout: int = -1, criteria: Optional[AuctionFilter] = None):
+    loop = get_event_loop()
+    loop.run_until_complete(
+        _watchAuction(key, profile, processor, interval=interval, timeout=timeout, criteria=criteria)
+    )
+
+async def _watchAuction(
+    key: str, profile: str, processor: Callable = defaultProcessor, *,
+    interval: int = 30, timeout: int = -1, criteria: Optional[AuctionFilter] = None):
+    prev, current = set(), set()
+    mainFilter = AuctionFilter(
+        (None, AuctionFilter(('bin', not_), ('claimed', not_), mode='and')),
+        (None, AuctionFilter(('bin', truth), ('bids', not_), mode='and')),
+        mode="or"
+    )
+    if (criteria):
+        mainFilter = mainFilter.merge(criteria, mode='and')
+    startTime = time()
+    while timeout < 0 or startTime + timeout > time():
+        del prev
+        prev, current = current, mainFilter.apply(loadAuctionAPI(
+            skyblock_auction(key=key, profile=profile)['auctions']
+        ))
+        processor(prev, current)
+        await sleep(interval)
 
 __all__ = ['AuctionOrder', 'AuctionEncoder',
-           'loadAuctionPages', 'loadAuctionAPI']
+           'loadAuctionPages', 'loadAuctionAPI', 'AuctionFilter', 'watchAuction']
